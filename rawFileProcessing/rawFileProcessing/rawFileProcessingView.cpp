@@ -13,6 +13,8 @@
 #include "rawFileProcessingDoc.h"
 #include "rawFileProcessingView.h"
 
+#include <cmath>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -28,6 +30,12 @@ BEGIN_MESSAGE_MAP(CrawFileProcessingView, CView)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
 	ON_COMMAND(ID_OPENRAWFILE_OPEN, &CrawFileProcessingView::OnOpenrawfileOpen)
+	ON_COMMAND(ID_SUBSAMPLING_2, &CrawFileProcessingView::OnSubsampling2)
+	ON_COMMAND(ID_SUBSAMPLING_3, &CrawFileProcessingView::OnSubsampling3)
+	ON_COMMAND(ID_SUBSAMPLING_4, &CrawFileProcessingView::OnSubsampling4)
+	ON_COMMAND(ID_QUANTIZATION_1BIT, &CrawFileProcessingView::OnQuantization1bit)
+	ON_COMMAND(ID_QUANTIZATION_2BIT, &CrawFileProcessingView::OnQuantization2bit)
+	ON_COMMAND(ID_QUANTIZATION_4BIT, &CrawFileProcessingView::OnQuantization4bit)
 END_MESSAGE_MAP()
 
 // CrawFileProcessingView construction/destruction
@@ -130,4 +138,83 @@ void CrawFileProcessingView::OnOpenrawfileOpen()
 
 		Invalidate();
 	}
+}
+
+void CrawFileProcessingView::subsample(int scale) {
+	int src_x, src_y;
+	unsigned char tempBuf[256][256];
+	for (int y = 0; y < 256 / scale; y++) {
+		for (int x = 0; x < 256 / scale; x++) {
+			// get corresponding coordinate on source image
+			// of target image pixel (x, y)
+			src_y = y * scale;
+			src_x = x * scale;
+
+			// check boundary
+			if (src_x > 256 - 1) src_x = 256 - 1;
+			if (src_y > 256 - 1) src_y = 256 - 1;
+
+			//take pixel value
+			tempBuf[y][x] = m_orgImg[src_y][src_x];
+		}
+	}
+
+	for (int y = 0; y < 256; y++) {
+		for (int x = 0; x < 256; x++)
+			m_orgImg[y][x] = tempBuf[y][x];
+	}
+}
+
+
+void CrawFileProcessingView::OnSubsampling2()
+{
+	subsample(2);
+	Invalidate();
+}
+
+
+void CrawFileProcessingView::OnSubsampling3()
+{
+	subsample(3);
+	Invalidate();
+}
+
+
+void CrawFileProcessingView::OnSubsampling4()
+{
+	subsample(4);
+	Invalidate();
+}
+
+
+void CrawFileProcessingView::NBitQt(int bit)
+{
+	int nlevel = pow((float)2, bit);
+	float delta = 255 / (nlevel - 1);
+	for (int y = 0; y < 256; y++)
+	{
+		for (int x = 0; x < 256; x++)
+			m_orgImg[y][x] = delta*round(m_orgImg[y][x] / delta);
+	}
+}
+
+
+void CrawFileProcessingView::OnQuantization1bit()
+{
+	NBitQt(1);
+	Invalidate();
+}
+
+
+void CrawFileProcessingView::OnQuantization2bit()
+{
+	NBitQt(2);
+	Invalidate();
+}
+
+
+void CrawFileProcessingView::OnQuantization4bit()
+{
+	NBitQt(4);
+	Invalidate();
 }
