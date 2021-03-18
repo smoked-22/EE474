@@ -16,10 +16,9 @@
 # Visual Studio Files
 Debug
 Release
+*.aps
 *.suo
-*.csproj.user
-*.vbproj.user
-*.vcxproj*
+*.user
 ipch
 *sdf
 
