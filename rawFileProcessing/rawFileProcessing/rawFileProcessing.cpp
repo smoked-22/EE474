@@ -157,6 +157,8 @@ protected:
 // Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+//	afx_msg void OnPixelpointprocessingContrast();
 };
 
 CAboutDlg::CAboutDlg() noexcept : CDialogEx(IDD_ABOUTBOX)
@@ -169,6 +171,7 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
+//	ON_COMMAND(ID_PIXELPOINTPROCESSING_CONTRAST, &CAboutDlg::OnPixelpointprocessingContrast)
 END_MESSAGE_MAP()
 
 // App command to run the dialog
@@ -182,3 +185,8 @@ void CrawFileProcessingApp::OnAppAbout()
 
 
 
+
+
+//void CAboutDlg::OnPixelpointprocessingContrast()
+//{
+//}

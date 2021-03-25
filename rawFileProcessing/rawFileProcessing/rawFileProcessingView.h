@@ -52,6 +52,9 @@ public:
 	afx_msg void OnQuantization1bit();
 	afx_msg void OnQuantization2bit();
 	afx_msg void OnQuantization4bit();
+//	afx_msg void OnPixelpointprocessingContrast();
+	afx_msg void OnPixelpointprocessingContrast();
+	afx_msg void OnSmoothingSmoothing();
 };
 
 #ifndef _DEBUG  // debug version in rawFileProcessingView.cpp
