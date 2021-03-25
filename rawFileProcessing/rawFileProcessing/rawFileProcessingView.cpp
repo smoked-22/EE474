@@ -36,6 +36,9 @@ BEGIN_MESSAGE_MAP(CrawFileProcessingView, CView)
 	ON_COMMAND(ID_QUANTIZATION_1BIT, &CrawFileProcessingView::OnQuantization1bit)
 	ON_COMMAND(ID_QUANTIZATION_2BIT, &CrawFileProcessingView::OnQuantization2bit)
 	ON_COMMAND(ID_QUANTIZATION_4BIT, &CrawFileProcessingView::OnQuantization4bit)
+//	ON_COMMAND(ID_PIXELPOINTPROCESSING_CONTRAST, &CrawFileProcessingView::OnPixelpointprocessingContrast)
+ON_COMMAND(ID_PIXELPOINTPROCESSING_CONTRAST, &CrawFileProcessingView::OnPixelpointprocessingContrast)
+ON_COMMAND(ID_SMOOTHING_SMOOTHING, &CrawFileProcessingView::OnSmoothingSmoothing)
 END_MESSAGE_MAP()
 
 // CrawFileProcessingView construction/destruction
@@ -216,5 +219,93 @@ void CrawFileProcessingView::OnQuantization2bit()
 void CrawFileProcessingView::OnQuantization4bit()
 {
 	NBitQt(4);
+	Invalidate();
+}
+
+
+//void CrawFileProcessingView::OnPixelpointprocessingContrast()
+//{
+//	int r1 = 70, s1 = 50;
+//	int r2 = 150, s2 = 180;
+//	int L = 256;
+//	float leftFactor = (r1 != 0) ? (float)s1 / r1 : (float)s1 / (r1 + 1);
+//	float rightFactor = (L - 1 - r2 != 0) ?
+//		(float)(L - 1 - s2) / (L - 1 - r2) : (float)(L - 1 - s2) / (L - r2);
+//	float middleFactor = (r2 - r1 != 0) ?
+//		(float)(s2 - s1) / (r2 - r1) : (float)(s2 - s1) / (r2 - r1 + 1);
+//	for (int y = 0; y < 256; y++) {
+//		if (m_orgImg[y][x] < r1) {
+//			m_orgImg[y][x] - (unsigned char)(leftFactor * m_orgImg[y][x] + .5);
+//		}
+//		else if (r1 <= m_orgImg[y][x] && m_orgImg[y][x] <= r2) {
+//			m_orgImg[y][x] = (unsigned char)(middleFactor * (m_orgImg[y][x] - r1) + s1 + .5);
+//		}
+//		else {
+//			m_orgImg[y][x] = (unsigned char)(rightFactor * (m_orgImg[y][x] - r2) + s2 + .5);
+//		}
+//	}
+//	Invalidate();
+//}
+
+
+void CrawFileProcessingView::OnPixelpointprocessingContrast()
+{
+	int r1 = 70, s1 = 50;
+	int r2 = 150, s2 = 180;
+	int L = 256;
+	float leftFactor = (r1 != 0) ? (float)s1 / r1 : (float)s1 / (r1 + 1);
+	float rightFactor = (L - 1 - r2 != 0) ?
+		(float)(L - 1 - s2) / (L - 1 - r2) : (float)(L - 1 - s2) / (L - r2);
+	float middleFactor = (r2 - r1 != 0) ?
+		(float)(s2 - s1) / (r2 - r1) : (float)(s2 - s1) / (r2 - r1 + 1);
+	for (int y = 0; y < L; y++) {
+		for (int x = 0; x < L; x++) {
+			if (m_orgImg[y][x] < r1) {
+				m_orgImg[y][x] - (unsigned char)(leftFactor * m_orgImg[y][x] + .5);
+			}
+			else if (r1 <= m_orgImg[y][x] && m_orgImg[y][x] <= r2) {
+				m_orgImg[y][x] = (unsigned char)(middleFactor * (m_orgImg[y][x] - r1) + s1 + .5);
+			}
+			else {
+				m_orgImg[y][x] = (unsigned char)(rightFactor * (m_orgImg[y][x] - r2) + s2 + .5);
+			}
+		}
+	}
+	Invalidate();
+}
+
+
+void CrawFileProcessingView::OnSmoothingSmoothing()
+{
+	int maskValues[3][3];
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			maskValues[i][j] = 1;
+		}
+	}
+
+	int sumValue;
+
+	unsigned char tempBuf[256][256];
+	for (int y = 1; y < 256 - 1; y++) {
+		for (int x = 1; x < 256 - 1; x++) {
+			sumValue = 0;
+
+			for (int ir = -1; ir <= 1; ir++) {
+				for (int ic = -1; ic <= 1; ic++) {
+					sumValue += m_orgImg[y + ir][x + ic] * maskValues[ir + 1][ic + 1];
+				}
+			}
+
+			tempBuf[y][x] = sumValue / 9;
+		}
+	}
+
+	for (int y = 1; y < 256 - 1; y++) {
+		for (int x = 1; x < 256 - 1; x++) {
+			m_orgImg[y][x] = tempBuf[y][x];
+		}
+	}
+
 	Invalidate();
 }
