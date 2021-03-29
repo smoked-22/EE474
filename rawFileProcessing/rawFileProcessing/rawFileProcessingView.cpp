@@ -358,14 +358,85 @@ void CrawFileProcessingView::OnSharpeningSharpening()
 }
 
 
+unsigned char lint(unsigned char l1, unsigned char r1, float w_x) {
+	return (unsigned char)(l1 * w_x + r1 * (1 - w_x));
+}
+
+
+unsigned char blint(unsigned char l1, unsigned char r1, unsigned char l2, unsigned char r2, float w_x, float w_y) {
+	return (unsigned char)lint(lint(l1, r1, w_x), lint(l2, r2, w_x), w_y);
+}
+
+
 void CrawFileProcessingView::OnInterpolationBilinear()
 {
+	/// <summary>
+	/// bilinear interpolation calculates pixel values based on quarter length
+	/// </summary>
 	
+	// temporary buffer initialiation
+	unsigned char tempBuf[256][256];
+
+	// TODO
+	//create a padded m_orgImg
+	unsigned char m_orgImg_pad[130][130];
+	m_orgImg_pad[0][0] = m_orgImg[0][0];
+	m_orgImg_pad[0][129] = m_orgImg[0][127];
+	m_orgImg_pad[129][0] = m_orgImg[127][0];
+	m_orgImg_pad[129][129] = m_orgImg[127][127];
+
+	for (int y = 0; y < 128; y++) {
+		for (int x = 0; x < 128; x++) {
+			if (y == 0){
+				// copy horizontal pad
+				m_orgImg_pad[y][x + 1] = m_orgImg[y][x];
+			}
+			if (y == 127) {
+				m_orgImg_pad[y + 2][x + 2] = m_orgImg[y][x];
+			}
+			// copy non-padded values
+			m_orgImg_pad[y + 1][x + 1] = m_orgImg[y][x];
+		}
+		// copy vertical pad
+		m_orgImg_pad[y + 1][0] = m_orgImg[y][0];
+		m_orgImg_pad[y + 1][129] = m_orgImg[y][127];
+	}
+
+
+	// iteration for interpolation
+	unsigned char left1, left2, right1, right2;
+	for (int y = 0; y < 256; y ++) {
+		for (int x = 0; x < 256; x++) {
+			float w_x = (x % 2 == 0) ? .25 : .75;
+			float w_y = (y % 2 == 0) ? .25 : .75;
+			int row = (y + 1) / 2;
+			int col = (x + 1) / 2;
+			left1 = m_orgImg_pad[row][col];
+			left2 = m_orgImg_pad[row + 1][col];
+			right1 = m_orgImg_pad[row][col + 1];
+			right2 = m_orgImg_pad[row + 1][col + 1];
+
+			tempBuf[y][x] = blint(left1, right1, left2, right2, w_x, w_y);
+		}
+	}
+	
+
+	//replace original image with interpolated
+	for (int y = 0; y < 256; y++) {
+		for (int x = 0; x < 256; x++) {
+			m_orgImg[y][x] = tempBuf[y][x];
+		}
+	}
+
+	Invalidate();
 }
 
 
 void CrawFileProcessingView::OnInterpolationNearestneighbor()
 {
+	/// <summary>
+	/// interpolation process is done with expanding pixels in odd numbered indices
+	/// </summary>
 	int L = 256;
 	unsigned char tempBuf[256][256];
 	for (int ir = 0; ir < L / 2; ++ir) {
