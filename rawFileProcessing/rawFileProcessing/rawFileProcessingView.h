@@ -55,6 +55,9 @@ public:
 //	afx_msg void OnPixelpointprocessingContrast();
 	afx_msg void OnPixelpointprocessingContrast();
 	afx_msg void OnSmoothingSmoothing();
+	afx_msg void OnSharpeningSharpening();
+	afx_msg void OnInterpolationBilinear();
+	afx_msg void OnInterpolationNearestneighbor();
 };
 
 #ifndef _DEBUG  // debug version in rawFileProcessingView.cpp

@@ -39,6 +39,9 @@ BEGIN_MESSAGE_MAP(CrawFileProcessingView, CView)
 //	ON_COMMAND(ID_PIXELPOINTPROCESSING_CONTRAST, &CrawFileProcessingView::OnPixelpointprocessingContrast)
 ON_COMMAND(ID_PIXELPOINTPROCESSING_CONTRAST, &CrawFileProcessingView::OnPixelpointprocessingContrast)
 ON_COMMAND(ID_SMOOTHING_SMOOTHING, &CrawFileProcessingView::OnSmoothingSmoothing)
+ON_COMMAND(ID_SHARPENING_SHARPENING, &CrawFileProcessingView::OnSharpeningSharpening)
+ON_COMMAND(ID_INTERPOLATION_BILINEAR, &CrawFileProcessingView::OnInterpolationBilinear)
+ON_COMMAND(ID_INTERPOLATION_NEARESTNEIGHBOR, &CrawFileProcessingView::OnInterpolationNearestneighbor)
 END_MESSAGE_MAP()
 
 // CrawFileProcessingView construction/destruction
@@ -304,6 +307,74 @@ void CrawFileProcessingView::OnSmoothingSmoothing()
 	for (int y = 1; y < 256 - 1; y++) {
 		for (int x = 1; x < 256 - 1; x++) {
 			m_orgImg[y][x] = tempBuf[y][x];
+		}
+	}
+
+	Invalidate();
+}
+
+
+void CrawFileProcessingView::OnSharpeningSharpening()
+{
+	//filter init
+	int maskValues[3][3];
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			maskValues[i][j] = -1;
+		}
+	}
+	maskValues[1][1] = 9;
+
+	//convolution
+	int sumValue;
+	unsigned char tempBuf[256][256];
+	for (int y = 1; y < 256 - 1; y++) {
+		for (int x = 1; x < 256 - 1; x++) {
+			sumValue = 0;
+
+			for (int ir = -1; ir <= 1; ir++) {
+				for (int ic = -1; ic <= 1; ic++) {
+					sumValue += m_orgImg[y + ir][x + ic] * maskValues[ir + 1][ic + 1];
+				}
+			}
+
+			//clipping values out of range
+			if (sumValue > 255)
+				sumValue = 255;
+			if (sumValue < 0)
+				sumValue = 0;
+			tempBuf[y][x] = sumValue;
+		}
+	}
+
+	//replace original image with sharpened
+	for (int y = 1; y < 256 - 1; y++) {
+		for (int x = 1; x < 256 - 1; x++) {
+			m_orgImg[y][x] = tempBuf[y][x];
+		}
+	}
+
+	Invalidate();
+}
+
+
+void CrawFileProcessingView::OnInterpolationBilinear()
+{
+	
+}
+
+
+void CrawFileProcessingView::OnInterpolationNearestneighbor()
+{
+	int L = 256;
+	for (int ir = 0; ir < L / 2; ++ir) {
+		for (int ic = 0; ic < L / 2; ++ic) {
+			int y = ic * 2;
+			int x = ir * 2;
+			unsigned char pix_val = m_orgImg[y][x];
+			m_orgImg[y][x + 1] = pix_val;
+			m_orgImg[y + 1][x] = pix_val;
+			m_orgImg[y + 1][x + 1] = pix_val;
 		}
 	}
 
