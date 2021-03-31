@@ -367,16 +367,23 @@ void CrawFileProcessingView::OnInterpolationBilinear()
 void CrawFileProcessingView::OnInterpolationNearestneighbor()
 {
 	int L = 256;
+	unsigned char tempBuf[256][256];
 	for (int ir = 0; ir < L / 2; ++ir) {
 		for (int ic = 0; ic < L / 2; ++ic) {
 			int y = ic * 2;
 			int x = ir * 2;
-			unsigned char pix_val = m_orgImg[y][x];
-			m_orgImg[y][x + 1] = pix_val;
-			m_orgImg[y + 1][x] = pix_val;
-			m_orgImg[y + 1][x + 1] = pix_val;
+			for (int i = 0; i < 2; i++) {
+				for (int j = 0; j < 2; j++)
+					tempBuf[y + i][x + j] = m_orgImg[ic][ir];
+			}
 		}
 	}
 
+	//replace original image with sharpened
+	for (int y = 1; y < 256 - 1; y++) {
+		for (int x = 1; x < 256 - 1; x++) {
+			m_orgImg[y][x] = tempBuf[y][x];
+		}
+	}
 	Invalidate();
 }
