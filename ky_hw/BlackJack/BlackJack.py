@@ -1,19 +1,22 @@
 import random
 import psutil
 import os
+from player import BlackJackPlayer
 
 
 class BlackJack:
 
     def __init__(self):
-        self.aiObservedCard = []
-        self.playerHand = []
-        self.scorePlayer = 0
-        self.scoreAI = 0
-        self.cnt = 0
-        self.lstAIHand = []
-        self.type = None
-        self.card = None
+        player = BlackJackPlayer('player')
+        ai = BlackJackPlayer('ai')
+        # self.aiObservedCard = []
+        # self.playerHand = []
+        # self.scorePlayer = 0
+        # self.scoreAI = 0
+        # self.cnt = 0
+        # self.lstAIHand = []
+        # self.type = None
+        # self.card = None
 
     def createMemoizationTable(self):
 
