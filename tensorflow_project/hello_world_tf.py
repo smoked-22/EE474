@@ -4,6 +4,7 @@ import os
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
+
 def main():
     x_data = np.random.rand(100).astype(np.float32)
     y_data = .1 * x_data + .3
@@ -21,7 +22,7 @@ def main():
         for itr in range(201):
             sess.run(train)
             if itr % 10 == 0:
-                print('@ iteration %i, estimated W = %.5f, estimated b = %.5f'% (itr, sess.run(W), sess.run(b)))
+                print('@ iteration %i, estimated W = %.5f, estimated b = %.5f' % (itr, sess.run(W), sess.run(b)))
 
         print('#' * 100)
         print('Learning Complete and estimated parameters [ W, b ] = [%.5f, %.5f]' % (sess.run(W), sess.run(b)))
