@@ -72,12 +72,10 @@ def CNN_model(x, n_classes, nShape, nChannels, dropout):
     tf.summary.image('input', x, 10)
 
     conv1 = conv_layer(x, [3, 3, nChannels, 32], [1, 1, 1, 1], name='Conv_1')
-    conv1_relu = tf.nn.relu(conv1, name='Conv_1_relu')
-    pool1 = pool_layer(conv1_relu, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_1')
+    pool1 = pool_layer(conv1, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_1')
 
     conv2 = conv_layer(pool1, [3, 3, 32, 64], [1, 1, 1, 1], name='Conv_2')
-    conv2_relu = tf.nn.relu(conv1, name='Conv_2_relu')
-    pool2 = pool_layer(conv2_relu, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_2')
+    pool2 = pool_layer(conv2, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_2')
 
     pool2_shape = pool2.get_shape().as_list()
     flattened = tf.reshape(pool2,
