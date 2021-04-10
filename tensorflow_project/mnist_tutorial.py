@@ -1,7 +1,7 @@
 import os
 import tensorflow as tf
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 LOGDIR = './mnist_tutorial/'
 
