@@ -9,14 +9,14 @@ mnist = tf.contrib.learn.datasets.mnist.read_data_sets(
     train_dir=LOGDIR + 'data', one_hot=True)
 
 
-def conv_layer(input, conv_kernel, conv_strides, conv_padding='SAME',
+def conv_layer(x_in, conv_kernel, conv_strides, conv_padding='SAME',
                name='Conv'):
     with tf.name_scope(name):
         w = tf.Variable(tf.truncated_normal(conv_kernel, mean=.0, stddev=.1),
                         name='W')
         b = tf.Variable(tf.constant(.0, shape=[conv_kernel[3]]), name='b')
 
-        conv = tf.nn.conv2d(input, w, strides=conv_strides,
+        conv = tf.nn.conv2d(x_in, w, strides=conv_strides,
                             padding=conv_padding)
 
         act = tf.nn.relu(conv + b)
@@ -28,21 +28,21 @@ def conv_layer(input, conv_kernel, conv_strides, conv_padding='SAME',
         return act
 
 
-def pool_layer(input, poo_kernel, pool_strides, poo_padding='VALID',
+def pool_layer(x_in, poo_kernel, pool_strides, poo_padding='VALID',
                name='Pool'):
     with tf.name_scope(name):
-        pool = tf.nn.max_pool(input, ksize=poo_kernel, strides=pool_strides,
+        pool = tf.nn.max_pool(x_in, ksize=poo_kernel, strides=pool_strides,
                               padding=poo_padding)
         return pool
 
 
-def fc_layer(input, size_in, size_out, dropoutProb=None, name='FC'):
+def fc_layer(x_in, size_in, size_out, dropoutProb=None, name='FC'):
     with tf.name_scope(name):
         w = tf.Variable(tf.truncated_normal([size_in, size_out], stddev=.1),
                         name='W')
         b = tf.Variable(tf.constant(.1, shape=[size_out]), name='b')
 
-        act = tf.nn.relu(tf.matmul(input, w) + b)
+        act = tf.nn.relu(tf.matmul(x_in, w) + b)
 
         if dropoutProb is not None:
             act = tf.nn.dropout(act, dropoutProb, name='dropout')
@@ -53,13 +53,13 @@ def fc_layer(input, size_in, size_out, dropoutProb=None, name='FC'):
         return act
 
 
-def bn_layer(input, offset=None, scale=None,
+def bn_layer(x_in, offset=None, scale=None,
              name='bn'):
     with tf.name_scope(name):
         # mean, variance = tf.nn.moments(x=input, axes=[0], keep_dims=True)
         mean, variance = (0, 1)
         # epsilon set arbitrarily
-        batch_norm = tf.nn.batch_normalization(x=input, mean=mean,
+        batch_norm = tf.nn.batch_normalization(x=x_in, mean=mean,
                                                variance=variance,
                                                offset=offset,
                                                scale=scale,
@@ -67,22 +67,20 @@ def bn_layer(input, offset=None, scale=None,
         return batch_norm
 
 
-def CNN_model(x, n_classes, nShape, nChannels, dropout):
-    x = tf.reshape(x, [-1, nShape, nShape, nChannels])
-    tf.summary.image('input', x, 10)
+def CNN_model(batch_in, n_classes, nShape, nChannels, dropout):
+    batch_in = tf.reshape(batch_in, [-1, nShape, nShape, nChannels])
+    tf.summary.image('input', batch_in, 10)
 
-    conv1 = conv_layer(x, [3, 3, nChannels, 32], [1, 1, 1, 1], name='Conv_1')
-    pool1 = pool_layer(conv1, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_1')
-    bn1 = bn_layer(pool1)
+    batch_in = conv_layer(batch_in, [3, 3, nChannels, 32], [1, 1, 1, 1], name='Conv_1')
+    batch_in = pool_layer(batch_in, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_1')
 
-    conv2 = conv_layer(bn1, [3, 3, 32, 64], [1, 1, 1, 1], name='Conv_2')
-    pool2 = pool_layer(conv2, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_2')
-    bn2 = bn_layer(pool2)
+    batch_in = conv_layer(batch_in, [3, 3, 32, 64], [1, 1, 1, 1], name='Conv_2')
+    batch_in = pool_layer(batch_in, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_2')
 
-    pool2_shape = bn2.get_shape().as_list()
-    flattened = tf.reshape(pool2,
+    batch_in_shape = batch_in.get_shape().as_list()
+    flattened = tf.reshape(batch_in,
                            [-1,
-                            pool2_shape[1] * pool2_shape[2] * pool2_shape[3]])
+                            batch_in_shape[1] * batch_in_shape[2] * batch_in_shape[3]])
 
     flattened_shape = flattened.get_shape().as_list()
     fc1 = fc_layer(flattened, flattened_shape[1], 1024,
