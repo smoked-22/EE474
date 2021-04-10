@@ -54,10 +54,10 @@ def fc_layer(input, size_in, size_out, dropoutProb=None, name='FC'):
 
 
 def bn_layer(input, offset=None, scale=None,
-             name='Batch Norm'):
+             name='bn'):
     with tf.name_scope(name):
-        # TODO: keepdims may be needed
-        mean, variance = tf.nn.moments(x=input, axes=[0])
+        # mean, variance = tf.nn.moments(x=input, axes=[0], keep_dims=True)
+        mean, variance = (0, 1)
         # epsilon set arbitrarily
         batch_norm = tf.nn.batch_normalization(x=input, mean=mean,
                                                variance=variance,
@@ -73,11 +73,13 @@ def CNN_model(x, n_classes, nShape, nChannels, dropout):
 
     conv1 = conv_layer(x, [3, 3, nChannels, 32], [1, 1, 1, 1], name='Conv_1')
     pool1 = pool_layer(conv1, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_1')
+    bn1 = bn_layer(pool1)
 
-    conv2 = conv_layer(pool1, [3, 3, 32, 64], [1, 1, 1, 1], name='Conv_2')
+    conv2 = conv_layer(bn1, [3, 3, 32, 64], [1, 1, 1, 1], name='Conv_2')
     pool2 = pool_layer(conv2, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_2')
+    bn2 = bn_layer(pool2)
 
-    pool2_shape = pool2.get_shape().as_list()
+    pool2_shape = bn2.get_shape().as_list()
     flattened = tf.reshape(pool2,
                            [-1,
                             pool2_shape[1] * pool2_shape[2] * pool2_shape[3]])
