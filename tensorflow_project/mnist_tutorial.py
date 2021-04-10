@@ -86,6 +86,11 @@ def CNN_model(batch_in, n_classes, nShape, nChannels, dropout):
     batch_in = tf.nn.relu(batch_in)
     batch_in = pool_layer(batch_in, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_3')
 
+    batch_in = conv_layer(batch_in, [3, 3, 64, 128], [1, 1, 1, 1],
+                          name='Conv_4')
+    batch_in = tf.nn.relu(batch_in)
+    batch_in = pool_layer(batch_in, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_4')
+
     batch_in_shape = batch_in.get_shape().as_list()
     flattened = tf.reshape(batch_in,
                            [-1,
