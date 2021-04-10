@@ -1,7 +1,7 @@
 import os
 import tensorflow as tf
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 LOGDIR = './mnist_tutorial/'
 
@@ -38,10 +38,10 @@ def pool_layer(x_in, poo_kernel, pool_strides, poo_padding='VALID',
 
 def fc_layer(x_in, size_in, size_out, dropoutProb=None, name='FC'):
     with tf.name_scope(name):
-        w = tf.Variable(tf.truncated_normal([size_in, size_out], stddev=.1),
-                        name='W')
-        b = tf.Variable(tf.constant(.1, shape=[size_out]), name='b')
-
+        w = tf.get_variable(name=name+'w', shape=[size_in, size_out],
+                            initializer=tf.contrib.layers.xavier_initializer())
+        b = tf.Variable(tf.random_normal([size_out]), name='b')
+        bn_layer(x_in)
         act = tf.nn.relu(tf.matmul(x_in, w) + b)
 
         if dropoutProb is not None:
@@ -53,42 +53,46 @@ def fc_layer(x_in, size_in, size_out, dropoutProb=None, name='FC'):
         return act
 
 
-def bn_layer(x_in, offset=None, scale=None,
-             name='bn'):
+def bn_layer(x_in, name='bn'):
     with tf.name_scope(name):
-        # mean, variance = tf.nn.moments(x=input, axes=[0], keep_dims=True)
-        mean, variance = (0, 1)
-        # epsilon set arbitrarily
-        batch_norm = tf.nn.batch_normalization(x=x_in, mean=mean,
-                                               variance=variance,
-                                               offset=offset,
-                                               scale=scale,
-                                               variance_epsilon=1e-7)
+        batch_norm = tf.layers.batch_normalization(x_in, center=True,
+                                                   scale=True,
+                                                   training=False)
         return batch_norm
 
 
+def conv_sequence(x_in, ch_in, ch_out, n):
+    n = str(n)
+    x_out = conv_layer(x_in, [3, 3, ch_in, ch_out],
+                       [1, 1, 1, 1], name='Conv_'+n)
+    x_out = bn_layer(x_out, name='BN_'+n)
+    x_out = pool_layer(x_out, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_'+n)
+
+    return x_out
+
+
 def CNN_model(batch_in, n_classes, nShape, nChannels, dropout):
-    batch_in = tf.reshape(batch_in, [-1, nShape, nShape, nChannels])
-    tf.summary.image('input', batch_in, 10)
+    batch_out = tf.reshape(batch_in, [-1, nShape, nShape, nChannels])
+    tf.summary.image('input', batch_out, 10)
 
-    batch_in = conv_layer(batch_in, [3, 3, nChannels, 32], [1, 1, 1, 1], name='Conv_1')
-    batch_in = pool_layer(batch_in, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_1')
+    batch_out = conv_sequence(batch_out, nChannels, 32, 1)
 
-    batch_in = conv_layer(batch_in, [3, 3, 32, 64], [1, 1, 1, 1], name='Conv_2')
-    batch_in = pool_layer(batch_in, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_2')
+    batch_out = conv_sequence(batch_out, 32, 64, 2)
 
-    batch_in_shape = batch_in.get_shape().as_list()
-    flattened = tf.reshape(batch_in,
-                           [-1,
-                            batch_in_shape[1] * batch_in_shape[2] * batch_in_shape[3]])
+    batch_out = conv_sequence(batch_out, 64, 128, 3)
+
+    batch_out_shape = batch_out.get_shape().as_list()
+    shape_total = batch_out_shape[1] * batch_out_shape[2] * batch_out_shape[3]
+    flattened = tf.reshape(batch_out, [-1, shape_total])
 
     flattened_shape = flattened.get_shape().as_list()
     fc1 = fc_layer(flattened, flattened_shape[1], 1024,
                    dropoutProb=dropout, name='FC_1')
+
     fc2 = fc_layer(fc1, 1024, 512, dropoutProb=dropout, name='FC_2')
 
-    Prediction = fc_layer(fc2, 512, n_classes, name='Predicted_Digit')
-    return Prediction
+    prediction = fc_layer(fc2, 512, n_classes, name='Predicted_Digit')
+    return prediction
 
 
 def main():
