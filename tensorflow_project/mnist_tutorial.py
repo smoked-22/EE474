@@ -56,7 +56,7 @@ def fc_layer(x_in, size_in, size_out, dropoutProb=None, name='FC'):
 def bn_layer(x_in, offset=None, scale=None,
              name='bn'):
     with tf.name_scope(name):
-        mean, variance = tf.nn.moments(x_in, axis=[0], keep_dims=True)
+        mean, variance = tf.nn.moments(x_in, axes=[0], keep_dims=True)
         # epsilon set arbitrarily
         batch_norm = tf.nn.batch_normalization(x=x_in, mean=mean,
                                                variance=variance,
