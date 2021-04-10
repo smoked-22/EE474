@@ -56,8 +56,7 @@ def fc_layer(x_in, size_in, size_out, dropoutProb=None, name='FC'):
 def bn_layer(x_in, offset=None, scale=None,
              name='bn'):
     with tf.name_scope(name):
-        # mean, variance = tf.nn.moments(x=input, axes=[0], keep_dims=True)
-        mean, variance = (0, 1)
+        mean, variance = tf.nn.moments(x_in, axis=[0], keep_dims=True)
         # epsilon set arbitrarily
         batch_norm = tf.nn.batch_normalization(x=x_in, mean=mean,
                                                variance=variance,
@@ -72,9 +71,11 @@ def CNN_model(batch_in, n_classes, nShape, nChannels, dropout):
     tf.summary.image('input', batch_in, 10)
 
     batch_in = conv_layer(batch_in, [3, 3, nChannels, 32], [1, 1, 1, 1], name='Conv_1')
+    batch_in = bn_layer(batch_in, name='BN_1')
     batch_in = pool_layer(batch_in, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_1')
 
     batch_in = conv_layer(batch_in, [3, 3, 32, 64], [1, 1, 1, 1], name='Conv_2')
+    batch_in = bn_layer(batch_in, name='BN_2')
     batch_in = pool_layer(batch_in, [1, 2, 2, 1], [1, 2, 2, 1], name='Pool_2')
 
     batch_in_shape = batch_in.get_shape().as_list()
