@@ -19,7 +19,7 @@ def conv_layer(x_in, conv_kernel, conv_strides, conv_padding='SAME',
         conv = tf.nn.conv2d(x_in, w, strides=conv_strides,
                             padding=conv_padding)
 
-        act = tf.nn.relu(conv + b)
+        act = tf.nn.leaky_relu(conv + b, alpha=.3)
 
         tf.summary.histogram('weights', w)
         tf.summary.histogram('biases', b)
@@ -42,7 +42,7 @@ def fc_layer(x_in, size_in, size_out, dropoutProb=None, name='FC'):
                             initializer=tf.contrib.layers.xavier_initializer())
         b = tf.Variable(tf.random_normal([size_out]), name='b')
         bn_layer(x_in)
-        act = tf.nn.relu(tf.matmul(x_in, w) + b)
+        act = tf.nn.leaky_relu(tf.matmul(x_in, w) + b, alpha=.3)
 
         if dropoutProb is not None:
             act = tf.nn.dropout(act, dropoutProb, name='dropout')
