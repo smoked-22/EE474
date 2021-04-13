@@ -97,7 +97,7 @@ def CNN_model(batch_in, n_classes, nShape, nChannels, dropout):
 
 def main():
     minibatch_size = 128
-    lear_rate = .0001
+    lear_rate = .00001
     bta1 = .9
     bta2 = .999
     epsln = 1e-8
