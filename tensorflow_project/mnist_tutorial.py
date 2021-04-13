@@ -79,7 +79,9 @@ def CNN_model(batch_in, n_classes, nShape, nChannels, dropout):
 
     batch_out = conv_sequence(batch_out, 32, 64, 2)
 
-    batch_out = conv_sequence(batch_out, 64, 128, 3)
+    batch_out = conv_sequence(batch_out, 32, 64, 3)
+
+    batch_out = conv_sequence(batch_out, 64, 128, 4)
 
     batch_out_shape = batch_out.get_shape().as_list()
     shape_total = batch_out_shape[1] * batch_out_shape[2] * batch_out_shape[3]
