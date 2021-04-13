@@ -79,7 +79,7 @@ def CNN_model(batch_in, n_classes, nShape, nChannels, dropout):
 
     batch_out = conv_sequence(batch_out, 32, 64, 2)
 
-    batch_out = conv_sequence(batch_out, 32, 64, 3)
+    batch_out = conv_sequence(batch_out, 64, 64, 3)
 
     batch_out = conv_sequence(batch_out, 64, 128, 4)
 
