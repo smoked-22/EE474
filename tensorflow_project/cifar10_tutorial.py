@@ -98,34 +98,6 @@ def main():
         summ = tf.summary.merge_all()
         saver = tf.train.Saver()
 
-    with tf.Session() as sess:
-        LOGDIR = './cifar10_color_tutorial_HW/'
-        test_writer = tf.summary.FileWriter(logdir=LOGDIR + '/Test')
-
-        data = load_cifar10() / 1.
-
-        test_idx = [9995, 9999, 10000]
-        test_data = data[test_idx, :, :, :]
-
-        train_idx = range(0, 50000)
-        train_idx = [x for x in train_idx if x not in test_idx]
-        train_data = data[train_idx, :, :, :]
-
-        sess.run(tf.global_variables_initializer())
-        for itr in range(20001):
-            batch_idx = random.sample(range(train_data.shape[0]),
-                                      batch_size)
-            train_batch = train_data[batch_idx, :, :, :]
-            sess.run([optimizer], feed_dict={rgb_im: train_batch})
-            if itr % 100 == 0:
-                [train_loss] = sess.run([pixel_loss],
-                                        feed_dict={rgb_im: train_batch})
-                [test_loss, s] = sess.run([pixel_loss, summ],
-                                          feed_dict={rgb_im: test_data})
-                print('@ iteration: %i, Training Loss = %.6f , Test Loss '
-                      '= %.6f ' % (itr, train_loss, test_loss))
-                test_writer.add_summary(s, itr)
-                saver.save(sess, os.path.join(LOGDIR, 'model.ckpt'), itr)
 
 
 if __name__ == '__main__':
