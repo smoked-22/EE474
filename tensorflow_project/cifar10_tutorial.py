@@ -16,17 +16,6 @@ def load_cifar10():
         with open(data_sub_dir, 'rb') as fo:
             data_list.append(pickle.load(fo)['data'])
 
-    # with open(data_dir + '/data_batch_1', 'rb') as fo:
-    #     data1 = pickle.load(fo)['data']
-    # with open(data_dir + '/data_batch_2', 'rb') as fo:
-    #     data2 = pickle.load(fo)['data']
-    # with open(data_dir + '/data_batch_3', 'rb') as fo:
-    #     data3 = pickle.load(fo)['data']
-    # with open(data_dir + '/data_batch_4', 'rb') as fo:
-    #     data4 = pickle.load(fo)['data']
-    # with open(data_dir + '/data_batch_5', 'rb') as fo:
-    #     data5 = pickle.load(fo)['data']
-
     data = np.concatenate(data_list, axis=0)
     # data = np.concatenate(data1, data2, data3, data4, data5, axis=0)
     data = np.reshape(data, [50000, 3, 32, 32])
