@@ -34,7 +34,17 @@ def load_cifar10():
     return data
 
 
-def autoencoder_model(rgb_im):
+def rgb_to_1_ch_binary(rgb_im):
+    gt_gray = tf.image.rgb_to_grayscale(rgb_im)
+    gt_binary_1ch = tf.cast(tf.multiply(255,
+                                        tf.cast(tf.greater_equal(gt_gray,
+                                                                 128),
+                                                dtype=tf.int32)),
+                            dtype=tf.float32)
+    return gt_binary_1ch
+
+
+def autoencoder_model(rgb_im, mode='yuv'):
     conv1 = tf.layers.conv2d(rgb_im, filters=32,
                              kernel_size=(3, 3),
                              strides=(2, 2),
@@ -62,14 +72,23 @@ def autoencoder_model(rgb_im):
 
     tf.summary.image('input', rgb_im, 3)
 
-    gt_yuv_im = tf.image.rgb_to_yuv(rgb_im)
-    tf.summary.image('gt_Y', gt_yuv_im[:, :, :, 0:1], 3)
-    tf.summary.image('gt_U', gt_yuv_im[:, :, :, 1:2], 3)
-    tf.summary.image('gt_V', gt_yuv_im[:, :, :, 2:3], 3)
+    if mode == 'yuv':
+        gt_yuv_im = tf.image.rgb_to_yuv(rgb_im)
+        tf.summary.image('gt_Y', gt_yuv_im[:, :, :, 0:1], 3)
+        tf.summary.image('gt_U', gt_yuv_im[:, :, :, 1:2], 3)
+        tf.summary.image('gt_V', gt_yuv_im[:, :, :, 2:3], 3)
 
-    tf.summary.image('predicted_Y', deconv2[:, :, :, 0:1], 3)
-    tf.summary.image('predicted_U', deconv2[:, :, :, 1:2], 3)
-    tf.summary.image('predicted_V', deconv2[:, :, :, 2:3], 3)
+        tf.summary.image('predicted_Y', deconv2[:, :, :, 0:1], 3)
+        tf.summary.image('predicted_U', deconv2[:, :, :, 1:2], 3)
+        tf.summary.image('predicted_V', deconv2[:, :, :, 2:3], 3)
+    elif mode == '1_channel_binary':
+        gt_binary_1ch = rgb_to_1_ch_binary(rgb_im)
+
+        tf.summary.image("gt_1_channel_binary", gt_binary_1ch, 3)
+
+        tf.summary.image("predicted_binary", deconv2, 3)
+    else:
+        raise ValueError('invalid model type')
 
     return deconv2
 
@@ -81,26 +100,34 @@ def main():
     bta2 = .999
     eps = 1e-8
 
+    mode = "1_channel_binary"
     rgb_im = tf.placeholder(tf.float32, shape=[None, 32, 32, 3], name='x')
-    predicted_yuv_im = autoencoder_model(rgb_im)
+    predicted = autoencoder_model(rgb_im, mode=mode)
 
     with tf.name_scope('Loss'):
-        pixel_loss = tf.reduce_mean(tf.square(predicted_yuv_im -
-                                              tf.image.rgb_to_yuv(rgb_im)))
+        if mode == "1_channel_binary":
+            pixel_loss = tf.reduce_mean(tf.square(predicted -
+                                                  rgb_to_1_ch_binary(rgb_im)))
+        else:
+            pixel_loss = tf.reduce_mean(tf.square(predicted -
+                                                  tf.image.rgb_to_yuv(rgb_im)))
         tf.summary.scalar('pixel_loss', pixel_loss)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=lr,
                                            beta1=bta1,
                                            beta2=bta2,
-                                           epsilon=eps).minimize(
-            pixel_loss)
+                                           epsilon=eps).minimize(pixel_loss)
 
         summ = tf.summary.merge_all()
         saver = tf.train.Saver()
 
     with tf.Session() as sess:
         LOGDIR = './cifar10_color_tutorial_HW/'
-        test_writer = tf.summary.FileWriter(logdir=LOGDIR + '/Test')
+        version = 0
+        while os.path.isdir(os.path.join(LOGDIR, 'version_' + str(version))):
+            version += 1
+        test_writer = tf.summary.FileWriter(
+            os.path.join(LOGDIR, 'version_' + str(version), 'Test'))
 
         data = load_cifar10() / 1.
 
@@ -126,6 +153,7 @@ def main():
                       '= %.6f ' % (itr, train_loss, test_loss))
                 test_writer.add_summary(s, itr)
                 saver.save(sess, os.path.join(LOGDIR, 'model.ckpt'), itr)
+    print("version " + str(version) + " train finished")
 
 
 if __name__ == '__main__':
