@@ -125,17 +125,14 @@ def main():
                          gt_next_frames[:, :, :, i:i+1], 3)
 
     with tf.name_scope('Loss'):
-        # pixel_loss = tf.reduce_mean(tf.square(predicted_next_frame -
-        #                                       gt_next_frame))
-        sum_loss = 0
         for i in range(prediction_num):
-            sum_loss += tf.reduce_mean(tf.square(pred_next_frames[:, :, :, i]
-                                                 - gt_next_frames[:, :, :, i]))
-        tf.summary.scalar('pixel_loss', sum_loss)
+            pixel_loss = tf.reduce_mean(tf.square(pred_next_frames -
+                                                  gt_next_frames))
+        tf.summary.scalar('pixel_loss', pixel_loss)
 
     optimizer = tf.train.AdamOptimizer(learning_rate=lr,
                                        beta1=bta1, beta2=bta2,
-                                       epsilon=eps).minimize(sum_loss)
+                                       epsilon=eps).minimize(pixel_loss)
     summ = tf.summary.merge_all()
 
     saver = tf.train.Saver()
@@ -165,11 +162,11 @@ def main():
                                                                + prediction_num]
             sess.run([optimizer], feed_dict={batch_seq: train_batch})
             if itr % 100 == 0:
-                [train_loss] = sess.run([sum_loss],
+                [train_loss] = sess.run([pixel_loss],
                                         feed_dict={batch_seq: train_batch})
                 feed_dict = {batch_seq: test_data[:, :, :, 0: previous_num
                                                               + prediction_num]}
-                [test_loss, s] = sess.run([sum_loss, summ],
+                [test_loss, s] = sess.run([pixel_loss, summ],
                                           feed_dict=feed_dict)
                 print('@ iteration: %i, Training loss = %.6f, Test loss = %.6f'
                       % (itr, train_loss, test_loss))
