@@ -70,7 +70,7 @@ def predictor_model(previous_seq, previous_num, prediction_num):
                            kernel_size=[5, 5], filters=64)
 
     predictions = []
-    for seq_i in range(previous_num + prediction_num):
+    for seq_i in range(previous_num + prediction_num - 1):
         if seq_i > previous_num - 1:
             inputs = tf.zeros_like(enc_feature[:, 0, :, :, :])
         else:
@@ -81,7 +81,7 @@ def predictor_model(previous_seq, previous_num, prediction_num):
         with tf.variable_scope('convlstm_2', reuse=tf.AUTO_REUSE):
             conv_lstm_h2, conv_lstm_c2 = unit2(inputs=conv_lstm_h1,
                                                h=conv_lstm_h2, c=conv_lstm_c2)
-        if seq_i > previous_num - 1:
+        if seq_i > previous_num - 2:
             predictions.append(decoder(conv_lstm_h2))
 
     # prediction = decoder(conv_lstm_h2)
