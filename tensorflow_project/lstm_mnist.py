@@ -7,20 +7,6 @@ import conv_lstm
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
-def encoder(x):
-    conv = tf.layers.conv2d(x, filters=32, kernel_size=(3, 3), strides=(2, 2),
-                            padding='SAME', activation=tf.nn.relu)
-    conv = tf.layers.conv2d(conv, filters=32, kernel_size=(3, 3),
-                            strides=(1, 1),
-                            padding='SAME', activation=tf.nn.relu)
-    conv = tf.layers.conv2d(conv, filters=64, kernel_size=(3, 3),
-                            strides=(2, 2),
-                            padding='SAME', activation=tf.nn.relu)
-    conv = tf.layers.conv2d(conv, filters=64, kernel_size=(3, 3),
-                            strides=(1, 1),
-                            padding='SAME', activation=tf.nn.relu)
-    return conv
-
 
 def decoder(x):
     deconv = tf.layers.conv2d_transpose(x, filters=64, kernel_size=(3, 3),
