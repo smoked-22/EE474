@@ -7,12 +7,6 @@ import conv_lstm
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
-def load_moving_mnist():
-    data = np.load('mnist_test_seq.npy')
-    data = np.transpose(data, [1, 2, 3, 0])
-    return data
-
-
 def encoder(x):
     conv = tf.layers.conv2d(x, filters=32, kernel_size=(3, 3), strides=(2, 2),
                             padding='SAME', activation=tf.nn.relu)
